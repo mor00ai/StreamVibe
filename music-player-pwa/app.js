@@ -1,6 +1,6 @@
 // === Configurazione API (Il Tuo Server Backend NodeJS) ===
 // Sostituisci questo URL con l'indirizzo reale che ti darà Render.com!
-const BACKEND_URL = 'https://streamvibe-backend.onrender.com';
+const BACKEND_URL = 'https://streamvibe-d0mg.onrender.com';
 
 // JSONBlob URL per sync globale (No Auth Cloud)
 const JSONBLOB_API = 'https://jsonblob.com/api/jsonBlob';

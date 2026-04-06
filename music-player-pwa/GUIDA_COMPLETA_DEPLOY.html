@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <title>Guida Definitiva: Deploy PWA</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto; padding: 40px 20px; }
+        h1 { color: #ff2a5f; border-bottom: 2px solid #ff2a5f; padding-bottom: 10px; }
+        h2 { color: #2c3e50; margin-top: 30px; border-bottom: 1px solid #ddd; padding-bottom: 8px; }
+        p { margin-bottom: 16px; }
+        ul, ol { margin-bottom: 20px; padding-left: 20px; }
+        li { margin-bottom: 8px; }
+        code { background: #f4f4f4; padding: 2px 6px; border-radius: 4px; font-family: monospace; color: #d63384; font-weight:bold; }
+        a { color: #ff2a5f; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        .note { background: #fff3cd; border-left: 4px solid #ffecb5; padding: 15px; margin: 20px 0; border-radius: 4px; color: #856404; font-size: 0.95em; }
+        @media print {
+            body { padding: 0; max-width: 100%; }
+            .no-print { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="no-print" style="background:#e9ecef; padding: 15px; text-align:center; border-radius:8px; margin-bottom: 30px;">
+        <strong>Per avere la guida in PDF:</strong> Premi <code>Ctrl + P</code> (o vai su menu Impostazioni -> Stampa del tuo browser) e seleziona "Salva come PDF". Il layout è già formattato ad Hoc!
+    </div>
+
+    <h1>Guida Definitiva: Pubblicare la tua PWA Musicale</h1>
+    <p>Questa guida ti accompagna passo passo nella pubblicazione della tua PWA (Frontend + Backend). Quando separiamo il motore di ricerca di YouTube (il backend) dall'interfaccia visiva (il frontend), creiamo un'app vera e professionale senza blocchi.</p>
+
+    <h2>1. Come funziona la nostra Architettura</h2>
+    <ul>
+        <li><strong>GitHub</strong>: È la "cassaforte" del tuo codice. Sia il frontend che il backend vivono qui dentro, nella stessa cartella principale.</li>
+        <li><strong>Render.com (Il Backend)</strong>: Prende SOLO la cartella <code>server</code> da GitHub, esegue Node.js e bypassa YouTube per fornire lo streaming in background.</li>
+        <li><strong>Netlify / GitHub Pages (Il Frontend)</strong>: Prende i file visivi (<code>index.html</code>, <code>app.js</code>, <code>style.css</code>) da GitHub e crea il sito finale che installerai sul telefono.</li>
+    </ul>
+
+    <div class="note">
+        <strong>Nota:</strong> Per funzionalità puramente legate a conti e registrazioni (utenti e password), nelle tue app future il servizio migliore sarà <strong>Firebase</strong>. Ma per lo streaming specifico da YouTube avevamo assolutamente bisogno di un server privato come Render, perché richiedeva "forza bruta" e calcoli lato server per decriptare e scaricare l'audio, cosa che Firebase (Essendo puramente un Database) non permette di fare.
+    </div>
+
+    <h2>2. GitHub: Il Caricamento Globale</h2>
+    <p>L'obiettivo è portare tutto il progetto online su GitHub per renderlo accessibile dai servizi di hosting.</p>
+    <ol>
+        <li>Vai su <a href="https://github.com/" target="_blank">GitHub.com</a> e accedi.</li>
+        <li>Clicca sul tasto verde <strong>New</strong> per creare un nuovo Repository. Dai un nome (es: <code>pwa-musica-streamvibe</code>).</li>
+        <li>Clicca su <strong>Create repository</strong>.</li>
+        <li>Apri la pagina del repository appena creato e clicca su "uploading an existing file".</li>
+        <li>Dal tuo computer, apri la cartella locale dell'app.</li>
+        <li><strong>Seleziona tutti i file e cartelle in blocco</strong> (i file html, l'app.js, ma anche le intere cartelle <code>server</code>, e <code>icons</code>).</li>
+        <li>Trascina tutto il blocco selezionato al centro della pagina web di GitHub.</li>
+        <li>Attendi il caricamento e clicca su <strong>Commit changes</strong> (il bottone verde in basso).</li>
+    </ol>
+
+    <h2>3. Render.com: Accendere il Server (Backend)</h2>
+    <p>Ora che i file sono online, diamo vita al motore Node.js.</p>
+    <ol>
+        <li>Vai su <a href="https://render.com/" target="_blank">Render.com</a> e registrati.</li>
+        <li>Nella Dashboard, clicca su <strong>New +</strong> e scegli <strong>Web Service</strong>.</li>
+        <li>Scegli <em>"Build and deploy from a Git repository"</em> e procedi.</li>
+        <li>Collega il tuo account GitHub e spunta il repository appena creato. Clicca <strong>Connect</strong>.</li>
+        <li><strong>Opzioni di Configurazione (CRITICO)</strong>:
+            <ul>
+                <li><strong>Name</strong>: <code>streamvibe-backend</code> (o un nome a piacere).</li>
+                <li><strong>Root Directory</strong>: Scrivi esplicitamente <code>server</code>.</li>
+                <li><strong>Runtime</strong>: <code>Node</code>.</li>
+                <li><strong>Build Command</strong>: Scrivi <code>npm install</code>.</li>
+                <li><strong>Start Command</strong>: Scrivi <code>node index.js</code>.</li>
+                <li><strong>Instance Type</strong>: Seleziona il piano <strong>Free</strong> (gratuito).</li>
+            </ul>
+        </li>
+        <li>Clicca <strong>Create Web Service</strong> in basso alla pagina.</li>
+        <li>Attendi un paio di minuti. In alto a sinistra comparirà l'URL pubblico del tuo server, che dev'essere simile a <code>https://streamvibe-backend.onrender.com</code>.</li>
+    </ol>
+
+    <h2>4. Collegare il Server all'App (Aggiornamento di app.js)</h2>
+    <p>L'app visiva ha bisogno di sapere qual è il "numero di telefono" del nuovo server su Render per chiedergli la musica e bypassare YouTube.</p>
+    <ol>
+        <li>Sul tuo computer, apri il file <code>app.js</code>.</li>
+        <li>Cerca la riga della costante <code>BACKEND_URL</code> (solitamente riga 3), e sostituisci il vecchio <code>http://localhost:3000</code> con il nuovo link appena copiato da Render.<br>
+            <em>(Assicurati di incollarlo bene all'interno degli apici e non mettere la barra finale /)</em>.</li>
+        <li>Torna sul tuo repository GitHub, dove avevi già caricato i file.</li>
+        <li>Prendi il tuo file <code>app.js</code> modificato e trascinalo sopra la pagina GitHub, facendo di nuovo "Commit changes" in modo da sovrascriverlo. In questo modo Netlify riceverà l'app aggiornata con l'indirizzo vero!</li>
+    </ol>
+
+    <h2>5. Netlify: Mettere Online la PWA (Frontend)</h2>
+    <p>Infine, mettiamo online la facciata dell'app, in modo da poter accedere al player dal telefono con un link pulito.</p>
+    <ol>
+        <li>Vai su <a href="https://netlify.com/" target="_blank">Netlify.com</a> e registrati usando l'account GitHub.</li>
+        <li>Nella dashboard, clicca su <strong>Add new site</strong> e poi su <strong>Import an existing project</strong>.</li>
+        <li>Seleziona <strong>Deploy with GitHub</strong> e scegli il tuo repository musicale.</li>
+        <li>Nella schermata "Site Settings":
+            <ul>
+                <li><strong>Base directory</strong>: Lascia completamente vuoto!</li>
+                <li><strong>Build command</strong>: Lascia vuoto.</li>
+                <li><strong>Publish directory</strong>: Lascia vuoto.</li>
+            </ul>
+        </li>
+        <li>Clicca su <strong>Deploy site</strong>.</li>
+        <li>In pochi secondi Netlify genererà un link verde. Quello è il sito finale della tua PWA! Se lo apri dal cellulare ti basterà fare Condividi -> Aggiungi a Schermata Home per averla a tutto schermo esattamente come fosse scaricata dagli store!</li>
+    </ol>
+
+</body>
+</html>

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<body style="font-family: monospace;">
+    <h3>Testing APIs...</h3>
+    <div id="results"></div>
+    <script>
+    const urls = [
+      'https://pipedapi.kavin.rocks/search?q=vasco+rossi&filter=all',
+      'https://api.piped.projectsegfau.lt/search?q=vasco+rossi&filter=all',
+      'https://pipedapi.lunar.icu/search?q=vasco+rossi&filter=all',
+      'https://pipedapi.syncpundit.io/search?q=vasco+rossi&filter=all',
+      'https://inv.nadeko.net/api/v1/search?q=vasco+rossi',
+      'https://yewtu.be/api/v1/search?q=vasco+rossi',
+      'https://invidious.nerdvpn.de/api/v1/search?q=vasco+rossi'
+    ];
+
+    async function testAll() {
+      const resDiv = document.getElementById('results');
+      for (let url of urls) {
+         try {
+           const res = await fetch(url);
+           const data = await res.json().catch(e=>null);
+           const d = document.createElement('div');
+           d.style.color = res.ok ? 'green' : 'red';
+           d.innerText = url + " => " + res.status + " (items: " + (data && (data.items || data.length) ? 'yes' : 'no') + ")";
+           resDiv.appendChild(d);
+         } catch (e) {
+           const d = document.createElement('div');
+           d.style.color = 'red';
+           d.innerText = url + " => ERROR " + e.message;
+           resDiv.appendChild(d);
+         }
+      }
+      const done = document.createElement('div');
+      done.id = 'done';
+      done.innerText = 'DONE';
+      resDiv.appendChild(done);
+    }
+    testAll();
+    </script>
+</body>
+</html>

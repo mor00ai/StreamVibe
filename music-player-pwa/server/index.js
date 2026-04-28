@@ -67,7 +67,15 @@ app.get('/api/stream', async (req, res) => {
         // Crea lo stream usando le info già ottenute (più veloce e stabile)
         const audioStream = ytdl.downloadFromInfo(info, { 
             format: format,
-            highWaterMark: 1 << 25 // Buffer di 32MB per evitare interruzioni
+            highWaterMark: 1 << 25, // Buffer di 32MB per evitare interruzioni
+            requestOptions: {
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                    'Accept': '*/*',
+                    'Accept-Language': 'en-US,en;q=0.9',
+                    'Connection': 'keep-alive'
+                }
+            }
         });
         
         // Trasferisce i dati in tempo reale
@@ -98,3 +106,4 @@ app.get('/api/stream', async (req, res) => {
 app.listen(PORT, () => {
     console.log(`📡 [SERVER] Partito. In ascolto sulla porta ${PORT}`);
 });
+

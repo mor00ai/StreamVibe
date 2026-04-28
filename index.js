@@ -49,28 +49,49 @@ app.get('/api/stream', async (req, res) => {
         const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
         console.log(`[API STREAM] Inizio proxy per: ${videoUrl}`);
         
+        // Ottieni info del video
         const info = await ytdl.getInfo(videoUrl);
-        const format = ytdl.chooseFormat(info.formats, { quality: 'highestaudio' });
+        
+        // Scegli il formato audio migliore
+        const format = ytdl.chooseFormat(info.formats, { 
+            quality: 'highestaudio',
+            filter: 'audioonly' 
+        });
         
         if (!format) return res.status(404).send('Nessun file audio trovato.');
 
-        // Header per il browser per fargli capire che sta ricevendo un MP3 in stream!
+        // Header per il browser
         res.header('Content-Type', 'audio/mpeg');
         res.header('Accept-Ranges', 'bytes');
         
-        const audioStream = ytdl(videoUrl, { format: format });
+        // Crea lo stream usando le info già ottenute (più veloce e stabile)
+        const audioStream = ytdl.downloadFromInfo(info, { 
+            format: format,
+            highWaterMark: 1 << 25 // Buffer di 32MB per evitare interruzioni
+        });
         
-        // Trasferisce i dati in tempo reale da YouTube al tuo browser tramite il server
+        // Trasferisce i dati in tempo reale
         audioStream.pipe(res);
         
         audioStream.on('error', (err) => {
-            console.error('Errore flusso audio dal server youtube:', err.message);
-            if (!res.headersSent) res.status(500).send('Errore di decifrazione YouTube');
+            console.error('Errore flusso audio:', err.message);
+            if (!res.headersSent) res.status(500).send('Errore durante lo streaming');
+        });
+
+        // Gestione chiusura connessione improvvisa
+        req.on('close', () => {
+            if (audioStream.destroy) audioStream.destroy();
         });
         
     } catch (err) {
         console.error('Errore fatale in /api/stream:', err.message);
-        if (!res.headersSent) res.status(500).send('YouTube ha bloccato la richiesta in corso.');
+        if (!res.headersSent) {
+            if (err.message.includes('403')) {
+                res.status(403).send('YouTube ha bloccato la richiesta (403 Forbidden).');
+            } else {
+                res.status(500).send('Errore interno del server proxy.');
+            }
+        }
     }
 });
 

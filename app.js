@@ -404,6 +404,15 @@ audioPlayer.addEventListener('loadedmetadata', () => {
     totalTimeEl.textContent = formatTime(audioPlayer.duration);
 });
 
+// Gestione errori audio
+audioPlayer.onerror = () => {
+    console.error("Errore AudioPlayer:", audioPlayer.error);
+    isPlaying = false;
+    playIcon.className = 'ph-fill ph-play';
+    currentTitle.textContent = "Errore di streaming (YouTube blocca?)";
+    alert("Impossibile riprodurre il brano. YouTube potrebbe aver bloccato la richiesta del server.");
+};
+
 // === RICERCA LOGIC ===
 async function handleSearch() {
     const query = searchInput.value.trim();
@@ -487,6 +496,7 @@ function loadTrack(index) {
 
     try {
         // Usa il server proxy per riprodurre l'audio completo senza blocchi
+        audioPlayer.crossOrigin = 'anonymous';
         audioPlayer.src = `${BACKEND_URL}/api/stream?id=${trackInfo.videoId}`;
         currentTitle.textContent = trackInfo.title;
         

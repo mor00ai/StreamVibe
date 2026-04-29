@@ -1,6 +1,7 @@
 {
   "name": "streamvibe-backend",
   "version": "1.0.0",
+  "type": "module",
   "description": "Backend Proxy per aggirare le restrizioni CORS e scaricare i brani di YouTube",
   "main": "index.js",
   "scripts": {

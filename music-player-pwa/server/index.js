@@ -67,8 +67,8 @@ app.get('/api/stream', async (req, res) => {
         
         if (!format) return res.status(404).send('Nessun formato audio trovato.');
 
-        // Stream dei dati
-        const stream = await info.download({ format: format });
+        // Stream dei dati (Sintassi v17)
+        const stream = await info.download(format);
         
         res.header('Content-Type', 'audio/mpeg');
         res.header('Accept-Ranges', 'bytes');

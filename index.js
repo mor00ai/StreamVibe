@@ -1,7 +1,7 @@
-const express = require('express');
-const cors = require('cors');
-const yts = require('yt-search');
-const { Innertube } = require('youtubei.js');
+import express from 'express';
+import cors from 'cors';
+import yts from 'yt-search';
+import { Innertube } from 'youtubei.js';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -9,7 +9,6 @@ const PORT = process.env.PORT || 3000;
 // Abilita CORS
 app.use(cors());
 
-// Inizializza l'istanza YouTube una sola volta per tutto l'app (più veloce)
 let youtube;
 async function initYoutube() {
     try {
@@ -22,10 +21,10 @@ async function initYoutube() {
 initYoutube();
 
 app.get('/', (req, res) => {
-    res.send('StreamVibe Backend is running perfectly with YouTube.js!');
+    res.send('StreamVibe Backend is running perfectly with YouTube.js (ESM)!');
 });
 
-// Endpoint 1: Ricerca brani (Rimane invariato per velocità)
+// Endpoint 1: Ricerca brani
 app.get('/api/search', async (req, res) => {
     const query = req.query.q;
     if (!query) return res.status(400).json({ error: 'Testo di ricerca mancante' });
@@ -49,7 +48,7 @@ app.get('/api/search', async (req, res) => {
     }
 });
 
-// Endpoint 2: Streaming del brano (Nuova logica YouTube.js!)
+// Endpoint 2: Streaming del brano
 app.get('/api/stream', async (req, res) => {
     const videoId = req.query.id;
     if (!videoId) return res.status(400).send('ID del video mancante');
@@ -61,19 +60,16 @@ app.get('/api/stream', async (req, res) => {
             youtube = await Innertube.create();
         }
 
-        // Ottieni info e formato
         const info = await youtube.getInfo(videoId);
         const format = info.chooseFormat({ type: 'audio', quality: 'best' });
         
         if (!format) return res.status(404).send('Nessun formato audio trovato.');
 
-        // Stream dei dati (Sintassi v17)
         const stream = await info.download(format);
         
         res.header('Content-Type', 'audio/mpeg');
         res.header('Accept-Ranges', 'bytes');
 
-        // Trasferimento dei chunk in tempo reale
         for await (const chunk of stream) {
             res.write(chunk);
         }
@@ -90,4 +86,3 @@ app.get('/api/stream', async (req, res) => {
 app.listen(PORT, () => {
     console.log(`📡 [SERVER] Partito sulla porta ${PORT}`);
 });
-

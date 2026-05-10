@@ -9,26 +9,31 @@ const PORT = process.env.PORT || 3000;
 // Abilita CORS
 app.use(cors());
 
+// Inizializza l'istanza YouTube
 let youtube;
 async function initYoutube() {
     try {
+        // Usiamo Innertube.create() senza parametri per ora, 
+        // la libreria gestisce internamente la simulazione dei client.
         youtube = await Innertube.create();
         console.log('✅ [YOUTUBE] Istanza Innertube pronta');
     } catch (err) {
-        console.error('❌ [YOUTUBE] Errore inizializzazione:', err.message);
+        console.error('❌ [YOUTUBE] Errore inizializzazione Innertube:', err.message);
     }
 }
 initYoutube();
 
 app.get('/', (req, res) => {
-    res.send('StreamVibe Backend is Online (Version 3.0)!');
+    res.send('StreamVibe Backend is running with ESM and YouTubei.js!');
 });
 
-// Endpoint 1: Ricerca
+// Endpoint 1: Ricerca brani
 app.get('/api/search', async (req, res) => {
     const query = req.query.q;
-    if (!query) return res.status(400).json({ error: 'Manca query' });
+    if (!query) return res.status(400).json({ error: 'Testo di ricerca mancante' });
+
     try {
+        console.log(`[API SEARCH] Cerco: ${query}...`);
         const r = await yts(query);
         const videos = r.videos.slice(0, 25).map(v => ({
             type: 'stream',
@@ -41,55 +46,51 @@ app.get('/api/search', async (req, res) => {
         }));
         res.json({ items: videos });
     } catch (error) {
-        res.status(500).json({ error: "Errore ricerca" });
+        console.error("Errore ricerca:", error);
+        res.status(500).json({ error: "Errore durante la ricerca" });
     }
 });
 
-// Endpoint 2: Streaming con parametro Client corretto
+// Endpoint 2: Streaming del brano
 app.get('/api/stream', async (req, res) => {
     const videoId = req.query.id;
-    if (!videoId) return res.status(400).send('ID mancante');
+    if (!videoId) return res.status(400).send('ID del video mancante');
 
     try {
-        console.log(`[STREAM] Avvio per: ${videoId}`);
+        console.log(`[API STREAM] Richiesta stream per: ${videoId}`);
         
-        if (!youtube) youtube = await Innertube.create();
+        if (!youtube) {
+            youtube = await Innertube.create();
+        }
 
-        // Usiamo il client ANDROID correttamente come oggetto
-        const info = await youtube.getInfo(videoId, { client: 'ANDROID' });
+        // Ottieni info sul video
+        const info = await youtube.getInfo(videoId);
+        
+        // Scegli il formato audio migliore
         const format = info.chooseFormat({ type: 'audio', quality: 'best' });
         
-        if (!format) return res.status(404).send('Audio non trovato');
+        if (!format) return res.status(404).send('Nessun formato audio trovato.');
 
+        // Stream dei dati
         const stream = await info.download(format);
         
         res.header('Content-Type', 'audio/mpeg');
         res.header('Accept-Ranges', 'bytes');
 
+        // Trasferimento dei chunk in tempo reale al client
         for await (const chunk of stream) {
             res.write(chunk);
         }
         res.end();
         
     } catch (err) {
-        console.error('❌ Errore Stream:', err.message);
-        
-        // Tentativo di fallback: Link diretto
-        try {
-             const info = await youtube.getInfo(videoId);
-             const url = info.streaming_data?.formats[0]?.url;
-             if (url) {
-                 console.log("-> Fallback: Redirect a URL diretto");
-                 return res.redirect(url);
-             }
-        } catch (e) {}
-
+        console.error('❌ Errore in /api/stream:', err.message);
         if (!res.headersSent) {
-            res.status(500).send('YouTube blocca la richiesta. Prova un altro brano.');
+            res.status(500).send('YouTube ha bloccato la richiesta. Stiamo lavorando a una soluzione.');
         }
     }
 });
 
 app.listen(PORT, () => {
-    console.log(`📡 [SERVER] Partito su porta ${PORT}`);
+    console.log(`📡 [SERVER] Partito sulla porta ${PORT}`);
 });

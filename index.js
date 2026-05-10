@@ -9,14 +9,18 @@ const PORT = process.env.PORT || 3000;
 // Abilita CORS
 app.use(cors());
 
-// Inizializza l'istanza YouTube
+// Inizializza l'istanza YouTube con le credenziali per bypassare i blocchi
 let youtube;
+const VISITOR_DATA = 'CgtFVjV0YW1UeWpVUSiip4HQBjIoCgJJVBIiEh4SHAsMDg8QERITFBUWFxgZGhscHR4fICEiIyQlJicgKmLfAgrcAjE4LllUPTBjN0lBeVU2LWhjcENfLXVpeFpzMG91Q1Q5d0hucGhwbHVIT2toS0JFMTFicmVEcXduQ0dHTG1ZMTlyQWFmNi1GakpUeUVVZEVkQ0l6aGhPWXpnX3U0NTRIajRsalFDM0pKVUhvRWZ4TUxrMjdZWEZhZExwTXhaeDFkNDloMWhNMW5YaVg2MnVYNW1BWmNaZmswWE5aNmJONHJaN0EwQVI1bVBZNVVJWkx4SEh4VWZCdU1MUi0xN29jOE9DRmdjaHU1M2RTQ1gyc2VyQXotUm5DRkhCR2x6QXBEVGlxamR0QlduYUQ5dnhiTUtZOTRQOXJlby1UNWszaFBoNFNHSUItTGt0OThLa28zUml2S0dnMnZoMEtJcmV6bFl2OW1FaUNzbXpHYndGbVdqdy0wUzFyZ0ZaaU9vVHRzNFdzbEZrQkUwZnpfX3F3eGFlZFVaQzNOYU5aZw%3D%3D';
+const PO_TOKEN = 'INSERISCI_QUI_IL_PO_TOKEN'; // Lo otterremo tra poco
+
 async function initYoutube() {
     try {
-        // Usiamo Innertube.create() senza parametri per ora, 
-        // la libreria gestisce internamente la simulazione dei client.
-        youtube = await Innertube.create();
-        console.log('✅ [YOUTUBE] Istanza Innertube pronta');
+        youtube = await Innertube.create({
+            visitor_data: VISITOR_DATA,
+            po_token: PO_TOKEN
+        });
+        console.log('✅ [YOUTUBE] Istanza Innertube pronta con credenziali');
     } catch (err) {
         console.error('❌ [YOUTUBE] Errore inizializzazione Innertube:', err.message);
     }
